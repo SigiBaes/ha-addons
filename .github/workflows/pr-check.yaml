@@ -27,7 +27,7 @@ jobs:
         with:
           filters: .github/path-filters.yaml
 
-      - name: 📂 Detect chanced files
+      - name: 📂 Detect changed files
         uses: dorny/paths-filter@v4
         id: changed-files
         with:
@@ -85,18 +85,17 @@ jobs:
         run: |
           # shellcheck disable=SC2157,SC2086
           if [[ "${{ steps.info.outputs.architectures }}" =~ ${{ matrix.arch }} ]]; then
-             # shellcheck disable=SC2129
-             echo "build_arch=true" >> $GITHUB_OUTPUT;
-             # shellcheck disable=SC2129
-             echo "image=$(echo ${{ steps.info.outputs.image }} | cut -d'/' -f3)" >> $GITHUB_OUTPUT;
-             if [[ -z "$HEAD" ]] && [[ "${{ github.event_name }}" == "push" ]]; then
-                 # shellcheck disable=SC2129
-                 echo "BUILD_ARGS=" >> $GITHUB_ENV;
-             fi
+             echo "build_arch=true" >> "$GITHUB_OUTPUT"
            else
-             echo "${{ matrix.arch }} is not a valid arch for ${{ matrix.addon }}, skipping build";
-             # shellcheck disable=SC2129
-             echo "build_arch=false" >> $GITHUB_OUTPUT;
+             echo "${{ matrix.arch }} is not a valid arch for ${{ matrix.addon }}, skipping build"
+             echo "build_arch=false" >> "$GITHUB_OUTPUT"
+          fi
+          # This fork has no published image. The builder still needs a name for --test.
+          image_ref="${{ steps.info.outputs.image }}"
+          if [[ -n "$image_ref" ]]; then
+            echo "image=$(echo "$image_ref" | cut -d'/' -f3)" >> "$GITHUB_OUTPUT"
+          else
+            echo "image=local/${{ matrix.addon }}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Build ${{ matrix.addon }} add-on

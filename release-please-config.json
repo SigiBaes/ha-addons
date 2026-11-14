@@ -3,41 +3,8 @@
     "separate-pull-requests": true,
     "include-component-in-tag": true,
     "packages": {
-        "loki": {
-            "component": "loki",
-            "release-type": "simple",
-            "extra-files": [
-                {
-                    "type": "yaml",
-                    "path": "config.yaml",
-                    "jsonpath": "$.version"
-                }
-            ]
-        },
-        "mimir": {
-            "component": "mimir",
-            "release-type": "simple",
-            "extra-files": [
-                {
-                    "type": "yaml",
-                    "path": "config.yaml",
-                    "jsonpath": "$.version"
-                }
-            ]
-        },
         "otelcol": {
             "component": "otelcol",
-            "release-type": "simple",
-            "extra-files": [
-                {
-                    "type": "yaml",
-                    "path": "config.yaml",
-                    "jsonpath": "$.version"
-                }
-            ]
-        },
-        "tempo": {
-            "component": "tempo",
             "release-type": "simple",
             "extra-files": [
                 {

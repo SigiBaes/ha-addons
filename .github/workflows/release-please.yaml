@@ -7,82 +7,28 @@ on:
 
 permissions:
   contents: write
-  packages: write
   pull-requests: write
 
 name: release-please
-
-env:
-  BUILD_ARGS: ""
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: googleapis/release-please-action@v5
-        id: release
-        with:
-          token: ${{ secrets.MY_RELEASE_PLEASE_TOKEN }}
-    outputs:
-      releases_created: ${{ steps.release.outputs.releases_created }}
-      paths_released: ${{ steps.release.outputs.paths_released }}
-
-  build:
-    if: ${{ needs.release-please.outputs.releases_created }}
-    needs:
-      - release-please
-    runs-on: ubuntu-latest
-    name: Build ${{ matrix.arch }} ${{ matrix.addon }} add-on
-    strategy:
-      matrix:
-        addon: ${{ fromJSON(needs.release-please.outputs.paths_released) }}
-        arch:
-          - "aarch64"
-          - "amd64"
-          - "armv7"
-          - "i386"
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
-
-      - name: Get information
-        id: info
-        uses: home-assistant/actions/helpers/info@master
-        with:
-          path: "./${{ matrix.addon }}"
-
-      - name: Check if add-on should be built
-        id: check
+      - name: Check release token
+        id: token
         env:
-          HEAD: "${{ github.head_ref }}"
+          TOKEN: ${{ secrets.MY_RELEASE_PLEASE_TOKEN }}
         run: |
-          # shellcheck disable=SC2157,SC2086
-          if [[ "${{ steps.info.outputs.architectures }}" =~ ${{ matrix.arch }} ]]; then
-             # shellcheck disable=SC2129
-             echo "build_arch=true" >> $GITHUB_OUTPUT;
-             # shellcheck disable=SC2129
-             echo "image=$(echo ${{ steps.info.outputs.image }} | cut -d'/' -f3)" >> $GITHUB_OUTPUT;
-           else
-             echo "${{ matrix.arch }} is not a valid arch for ${{ matrix.addon }}, skipping build";
-             # shellcheck disable=SC2129
-             echo "build_arch=false" >> $GITHUB_OUTPUT;
+          if [[ -n "$TOKEN" ]]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "MY_RELEASE_PLEASE_TOKEN is unset; skipping release-please."
           fi
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v4.2.0
+      - uses: googleapis/release-please-action@v5
+        id: release
+        if: steps.token.outputs.present == 'true'
         with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build ${{ matrix.addon }} add-on
-        id: builderstep
-        if: steps.check.outputs.build_arch == 'true'
-        uses: home-assistant/builder@master
-        with:
-          args: |
-            --${{ matrix.arch }} \
-            --target /data/${{ matrix.addon }} \
-            --image "${{ steps.check.outputs.image }}" \
-            --docker-hub "ghcr.io/${{ github.repository_owner }}" \
-            --addon
+          token: ${{ secrets.MY_RELEASE_PLEASE_TOKEN }}

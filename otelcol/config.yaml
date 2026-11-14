@@ -1,7 +1,7 @@
-name: OpenTelemetry Collector
+name: OpenTelemetry Collector for UniFi
 version: 0.13.0
-slug: otelcol
-description: Bring the OpenTelemetry collector into your home
+slug: otelcol_unifi
+description: Receive UniFi SIEM syslog, parse CEF, and forward it over OTLP
 url: https://github.com/SigiBaes/ha-addons
 startup: services
 host_network: true

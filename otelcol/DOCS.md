@@ -1,22 +1,25 @@
-# Home Assistant Add-on: OpenTelemetry collector addon
+# OpenTelemetry Collector for UniFi
 
-This AddOn brings the [OpenTelemetry collector](https://github.com/open-telemetry/opentelemetry-collector-contrib) to your HomeAssistant.
+This add-on runs the [OpenTelemetry Collector](https://github.com/open-telemetry/opentelemetry-collector-contrib) on Home Assistant so a UniFi Dream Machine can send SIEM/CEF syslog to it. The example config parses CEF headers into `cef.*` and extensions into `cef.ext.*`, maps severity, and forwards the logs with OTLP (for example to Netdata on the same host).
 
-## Install from this fork
+It is a fork of the collector add-on in [cedricziel/ha-addons](https://github.com/cedricziel/ha-addons). Upstream publishes a prebuilt image and uses the slug `otelcol`. This fork:
 
-This fork does not publish a prebuilt image. Home Assistant builds the add-on on the device from the `Dockerfile` the first time you install or update it.
+- runs on the host network
+- is built on the device, with no upstream image
+- ships [`examples/unifi-cef-syslog.yaml`](examples/unifi-cef-syslog.yaml)
+- uses the slug `otelcol_unifi`, so both add-ons can be installed together
+
+## Install
 
 1. In Home Assistant, open **Settings → Add-ons → Add-on store → ⋮ → Repositories**.
 2. Add `https://github.com/SigiBaes/ha-addons` and wait for the store to refresh.
-3. Install **OpenTelemetry Collector**. The first start waits while Supervisor builds the image. That needs a working internet connection so the device can pull the Debian base image and the collector binary.
+3. Install **OpenTelemetry Collector for UniFi**. The first start waits while Supervisor builds the image. The device needs network access to pull the Debian base image and the collector binary.
 
-The OpenTelemetry Collector add-on page on this repository links back to `https://github.com/SigiBaes/ha-addons`.
+The add-on page links back to `https://github.com/SigiBaes/ha-addons`.
 
 ## How to use
 
-By default, it will do nothing except trying to scrape its own metrics.
-
-You can change the configuration to handle other data-streams.
+The default `config` option only receives OTLP and writes it to the debug exporter, including the collector's own metrics. Replace that option with the UniFi example below to receive CEF syslog.
 
 ## Host networking
 
