@@ -2,6 +2,16 @@
 
 This AddOn brings the [OpenTelemetry collector](https://github.com/open-telemetry/opentelemetry-collector-contrib) to your HomeAssistant.
 
+## Install from this fork
+
+This fork does not publish a prebuilt image. Home Assistant builds the add-on on the device from the `Dockerfile` the first time you install or update it.
+
+1. In Home Assistant, open **Settings → Add-ons → Add-on store → ⋮ → Repositories**.
+2. Add `https://github.com/SigiBaes/ha-addons` and wait for the store to refresh.
+3. Install **OpenTelemetry Collector**. The first start waits while Supervisor builds the image. That needs a working internet connection so the device can pull the Debian base image and the collector binary.
+
+The OpenTelemetry Collector add-on page on this repository links back to `https://github.com/SigiBaes/ha-addons`.
+
 ## How to use
 
 By default, it will do nothing except trying to scrape its own metrics.

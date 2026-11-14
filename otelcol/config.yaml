@@ -2,7 +2,7 @@ name: OpenTelemetry Collector
 version: 0.13.0
 slug: otelcol
 description: Bring the OpenTelemetry collector into your home
-url: https://github.com/cedricziel/ha-addons
+url: https://github.com/SigiBaes/ha-addons
 startup: services
 host_network: true
 ports:
@@ -53,4 +53,3 @@ options:
           exporters: [debug]
 schema:
   config: str
-image: ghcr.io/cedricziel/ha-addon-otelcol-{arch}

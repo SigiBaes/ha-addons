@@ -6,7 +6,7 @@
 [aarch64-shield]: https://img.shields.io/badge/aarch64-yes-green.svg
 [amd64-shield]: https://img.shields.io/badge/amd64-yes-green.svg
 
-This add-on runs [OpenTelemetry Collector Contrib](https://github.com/open-telemetry/opentelemetry-collector-contrib) on Home Assistant OS.
+This add-on runs [OpenTelemetry Collector Contrib](https://github.com/open-telemetry/opentelemetry-collector-contrib) on Home Assistant OS. This fork has no prebuilt image: Supervisor builds it on the device from the Dockerfile. See [DOCS.md](DOCS.md) for how to add `https://github.com/SigiBaes/ha-addons` and install it.
 
 It uses **host networking** so receivers can bind on the host (for example UDP syslog) and exporters can reach OTLP backends on `127.0.0.1`. Paste collector YAML into the `config` option. See [DOCS.md](DOCS.md) for details.
 
