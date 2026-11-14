@@ -1,0 +1,54 @@
+receivers:
+  syslog:
+    udp:
+      listen_address: "0.0.0.0:5140"
+    protocol: rfc3164
+    location: UTC
+    allow_skip_pri_header: true
+processors:
+  batch: {}
+  transform/cef:
+    error_mode: ignore
+    log_statements:
+      - context: log
+        statements:
+          - set(log.observed_time, Now()) where log.observed_time_unix_nano == 0
+          - set(log.time, log.observed_time) where log.time_unix_nano == 0
+          - set(log.cache["cef"], ExtractPatterns(log.body, "(?s)CEF:(?P<version>[0-9]+)\\|(?P<vendor>(?:[^|\\\\]|\\\\.)*)\\|(?P<product>(?:[^|\\\\]|\\\\.)*)\\|(?P<devver>(?:[^|\\\\]|\\\\.)*)\\|(?P<sigid>(?:[^|\\\\]|\\\\.)*)\\|(?P<name>(?:[^|\\\\]|\\\\.)*)\\|(?P<severity>[^|]*)\\|?(?P<ext>.*)$")) where IsString(log.body) and IsMatch(log.body, "(?s)CEF:(?P<version>[0-9]+)\\|(?P<vendor>(?:[^|\\\\]|\\\\.)*)\\|(?P<product>(?:[^|\\\\]|\\\\.)*)\\|(?P<devver>(?:[^|\\\\]|\\\\.)*)\\|(?P<sigid>(?:[^|\\\\]|\\\\.)*)\\|(?P<name>(?:[^|\\\\]|\\\\.)*)\\|(?P<severity>[^|]*)\\|?(?P<ext>.*)$")
+          - set(log.attributes["cef.version"], log.cache["cef"]["version"]) where IsMap(log.cache["cef"])
+          - set(log.attributes["cef.device_vendor"], log.cache["cef"]["vendor"]) where IsMap(log.cache["cef"])
+          - replace_pattern(log.attributes["cef.device_vendor"], "\\\\([|\\\\])", "$1") where IsMap(log.cache["cef"])
+          - set(log.attributes["cef.device_product"], log.cache["cef"]["product"]) where IsMap(log.cache["cef"])
+          - replace_pattern(log.attributes["cef.device_product"], "\\\\([|\\\\])", "$1") where IsMap(log.cache["cef"])
+          - set(log.attributes["cef.device_version"], log.cache["cef"]["devver"]) where IsMap(log.cache["cef"])
+          - replace_pattern(log.attributes["cef.device_version"], "\\\\([|\\\\])", "$1") where IsMap(log.cache["cef"])
+          - set(log.attributes["cef.signature_id"], log.cache["cef"]["sigid"]) where IsMap(log.cache["cef"])
+          - replace_pattern(log.attributes["cef.signature_id"], "\\\\([|\\\\])", "$1") where IsMap(log.cache["cef"])
+          - set(log.attributes["cef.name"], log.cache["cef"]["name"]) where IsMap(log.cache["cef"])
+          - replace_pattern(log.attributes["cef.name"], "\\\\([|\\\\])", "$1") where IsMap(log.cache["cef"])
+          - set(log.attributes["cef.severity"], log.cache["cef"]["severity"]) where IsMap(log.cache["cef"])
+          - set(log.severity_number, SEVERITY_NUMBER_INFO) where IsMap(log.cache["cef"]) and IsMatch(log.cache["cef"]["severity"], "^(?i)\\s*(low|[0-3])\\s*$")
+          - set(log.severity_number, SEVERITY_NUMBER_WARN) where IsMap(log.cache["cef"]) and IsMatch(log.cache["cef"]["severity"], "^(?i)\\s*(medium|[4-6])\\s*$")
+          - set(log.severity_number, SEVERITY_NUMBER_ERROR) where IsMap(log.cache["cef"]) and IsMatch(log.cache["cef"]["severity"], "^(?i)\\s*(high|[78])\\s*$")
+          - set(log.severity_number, SEVERITY_NUMBER_FATAL) where IsMap(log.cache["cef"]) and IsMatch(log.cache["cef"]["severity"], "^(?i)\\s*(very[- _]?high|9|10)\\s*$")
+          - set(log.severity_text, "INFO") where log.severity_number == SEVERITY_NUMBER_INFO and IsMap(log.cache["cef"])
+          - set(log.severity_text, "WARN") where log.severity_number == SEVERITY_NUMBER_WARN and IsMap(log.cache["cef"])
+          - set(log.severity_text, "ERROR") where log.severity_number == SEVERITY_NUMBER_ERROR and IsMap(log.cache["cef"])
+          - set(log.severity_text, "FATAL") where log.severity_number == SEVERITY_NUMBER_FATAL and IsMap(log.cache["cef"])
+          - set(log.cache["extsplit"], log.cache["cef"]["ext"]) where IsMap(log.cache["cef"]) and log.cache["cef"]["ext"] != ""
+          - replace_pattern(log.cache["extsplit"], "\\s+([A-Za-z0-9_]+)=", "\u001f$1=") where log.cache["extsplit"] != nil
+          - set(log.cache["ext"], ParseKeyValue(log.cache["extsplit"], "=", "\u001f")) where log.cache["extsplit"] != nil
+          - replace_all_patterns(log.cache["ext"], "value", "\\\\([=\\\\])", "$1") where log.cache["ext"] != nil
+          - replace_all_patterns(log.cache["ext"], "key", "^(.*)$", "cef.ext.$1") where log.cache["ext"] != nil
+          - merge_maps(log.attributes, log.cache["ext"], "upsert") where log.cache["ext"] != nil
+exporters:
+  otlp_grpc:
+    endpoint: 127.0.0.1:4317
+    tls:
+      insecure: true
+service:
+  pipelines:
+    logs:
+      receivers: [syslog]
+      processors: [transform/cef, batch]
+      exporters: [otlp_grpc]
