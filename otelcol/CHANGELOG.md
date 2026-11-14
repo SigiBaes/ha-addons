@@ -8,6 +8,7 @@
 * Run the collector on the host network so it can receive UDP syslog on the host and export OTLP to an endpoint on `127.0.0.1`. Supervisor does not apply the `ports` map in this mode, so the existing OTLP entries stay unset (`null`) rather than being published as host-port mappings. The default collector config still listens on 4317/tcp and 4318/tcp; the UniFi example binds UDP 5140 from its own config.
 * Add an example OpenTelemetry Collector config for UniFi Dream Machine SIEM/CEF syslog (`examples/unifi-cef-syslog.yaml`).
 * Build this add-on on the Home Assistant device instead of pulling `ghcr.io/cedricziel/ha-addon-otelcol-{arch}`. That registry has no `0.13.0` tag, so a fork install that kept the upstream image reference would fail.
+* Rename the add-on to OpenTelemetry Collector for UniFi and change the slug from `otelcol` to `otelcol_unifi`, so it can be installed next to the upstream collector add-on.
 
 ## [0.12.23](https://github.com/cedricziel/ha-addons/compare/otelcol-0.12.22...otelcol-0.12.23) (2026-10-23)
 
