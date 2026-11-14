@@ -1,5 +1,13 @@
 <!-- https://developers.home-assistant.io/docs/add-ons/presentation#keeping-a-changelog -->
 
+## 0.13.0 (2026-11-14)
+
+
+### Features
+
+* Run the collector on the host network so it can receive UDP syslog on the host and export OTLP to an endpoint on `127.0.0.1`. Supervisor does not apply the `ports` map in this mode, so the existing OTLP entries stay unset (`null`) rather than being published as host-port mappings. The default collector config still listens on 4317/tcp and 4318/tcp; the UniFi example binds UDP 5140 from its own config.
+* Add an example OpenTelemetry Collector config for UniFi Dream Machine SIEM/CEF syslog (`examples/unifi-cef-syslog.yaml`).
+
 ## [0.12.23](https://github.com/cedricziel/ha-addons/compare/otelcol-0.12.22...otelcol-0.12.23) (2026-10-23)
 
 
